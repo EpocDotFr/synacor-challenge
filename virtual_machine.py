@@ -1,8 +1,13 @@
-from collections import UserList
+import collections
 import struct
 
 
-class Memory(UserList):
+def msum(a, b):
+    """Modulo sum"""
+    return (a + b) % 32768
+
+
+class Memory(collections.UserList):
     def __init__(self, *args, **kvargs):
         super(Memory, self).__init__(*args, **kvargs)
 
@@ -41,17 +46,62 @@ class Memory(UserList):
         self.pointer -= i
 
 
+class Registers(collections.UserList):
+    START = 32768
+    END = 32775
+
+    def __init__(self):
+        self.indexes = list(range(self.START, self.END + 1))
+
+        super(Registers, self).__init__(
+            [0 for _ in range(0, len(self.indexes))]
+        )
+
+    def get(self, iv):
+        if not self.isri(iv):
+            return iv
+
+        i = self.getri(iv)
+
+        return self[i]
+
+    def set(self, iv, v):
+        if not self.isri(iv):
+            raise ValueError('Not a register index')
+
+        i = self.getri(iv)
+
+        self[i] = v
+
+    def isri(self, iv):
+        """Is register index"""
+        return self.START <= iv <= self.END
+
+    def getri(self, iv):
+        """Get register index"""
+        return self.indexes.index(iv)
+
+
 class VirtualMachine:
     def __init__(self):
         self.memory = Memory()
-        self.registers = []
-        self.stack = []
+        self.registers = Registers()
+        self.stack = collections.deque()
 
         self.opcodes = {
             0: self.halt,
+            1: self.set,
+            2: self.push,
+            3: self.pop,
+            4: self.eq,
+            5: self.gt,
             6: self.jmp,
             7: self.jt,
             8: self.jf,
+            9: self.add,
+            12: self.and_,
+            13: self.or_,
+            14: self.not_,
             19: self.out,
             21: self.noop,
         }
@@ -79,17 +129,58 @@ class VirtualMachine:
                 break
 
     def exec(self):
-        number = self.memory.getpv()
+        opcode = self.memory.getpv()
 
-        if number in self.opcodes:
-            return self.opcodes.get(number)()
+        if opcode in self.opcodes:
+            return self.opcodes.get(opcode)()
 
-        print(f'Unhandled number {number}')
+        print(f'Unhandled opcode {opcode}')
 
         return False
 
     def halt(self):
         return False
+
+    def set(self):
+        a, b = self.memory.getpvra(2)
+
+        self.registers.set(a, b)
+
+        self.memory.incp(3)
+
+    def push(self):
+        a = self.registers.get(
+            self.memory.getpva(1)
+        )
+
+        self.stack.appendleft(a)
+
+        self.memory.incp(2)
+
+    def pop(self):
+        a = self.memory.getpva(1)
+
+        v = self.stack.popleft()
+
+        self.registers.set(a, v)
+
+        self.memory.incp(2)
+
+    def eq(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, 1 if b == c else 0)
+
+        self.memory.incp(4)
+
+    def gt(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, 1 if b > c else 0)
+
+        self.memory.incp(4)
 
     def jmp(self, a=None):
         a = a or self.memory.getpva(1)
@@ -98,6 +189,7 @@ class VirtualMachine:
 
     def jt(self):
         a, b = self.memory.getpvra(2)
+        a = self.registers.get(a)
 
         if a != 0:
             return self.jmp(b)
@@ -106,11 +198,44 @@ class VirtualMachine:
 
     def jf(self):
         a, b = self.memory.getpvra(2)
+        a = self.registers.get(a)
 
         if a == 0:
             return self.jmp(b)
         else:
             self.memory.incp(3)
+
+    def add(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, msum(b, c))
+
+        self.memory.incp(4)
+
+    def and_(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, b & c)
+
+        self.memory.incp(4)
+
+    def or_(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, b | c)
+
+        self.memory.incp(4)
+
+    def not_(self):
+        a, b = self.memory.getpvra(2)
+        b = self.registers.get(b)
+
+        self.registers.set(a, ~b) # FIXME
+
+        self.memory.incp(3)
 
     def out(self):
         a = self.memory.getpva(1)
