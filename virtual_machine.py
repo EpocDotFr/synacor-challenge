@@ -1,10 +1,21 @@
 import collections
 import struct
 
+MODULO = 32768
+
 
 def msum(a, b):
     """Modulo sum"""
-    return (a + b) % 32768
+    return (a + b) % MODULO
+
+
+def mmul(a, b):
+    """Modulo multiply"""
+    return (a * b) % MODULO
+
+
+def bitwise_not(number, num_bits):
+    return (1 << num_bits) - 1 - number
 
 
 class Memory(collections.UserList):
@@ -99,9 +110,15 @@ class VirtualMachine:
             7: self.jt,
             8: self.jf,
             9: self.add,
+            10: self.mult,
+            11: self.mod,
             12: self.and_,
             13: self.or_,
             14: self.not_,
+            15: self.rmem,
+            16: self.wmem,
+            17: self.call,
+            18: self.ret,
             19: self.out,
             21: self.noop,
         }
@@ -213,6 +230,22 @@ class VirtualMachine:
 
         self.memory.incp(4)
 
+    def mult(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, mmul(b, c))
+
+        self.memory.incp(4)
+
+    def mod(self):
+        a, b, c = self.memory.getpvra(3)
+        b, c = self.registers.get(b), self.registers.get(c)
+
+        self.registers.set(a, b % c)
+
+        self.memory.incp(4)
+
     def and_(self):
         a, b, c = self.memory.getpvra(3)
         b, c = self.registers.get(b), self.registers.get(c)
@@ -233,9 +266,37 @@ class VirtualMachine:
         a, b = self.memory.getpvra(2)
         b = self.registers.get(b)
 
-        self.registers.set(a, ~b) # FIXME
+        self.registers.set(a, bitwise_not(b, 15))
 
         self.memory.incp(3)
+
+    def rmem(self):
+        a, b = self.memory.getpvra(2)
+        b = self.registers.get(b)
+
+        self.registers.set(a, self.memory[b])
+
+        self.memory.incp(3)
+
+    def wmem(self):
+        a, b = self.memory.getpvra(2)
+        a = self.registers.get(a)
+
+        self.memory[a] = b
+
+        self.memory.incp(3)
+
+    def call(self):
+        a = self.registers.get(
+            self.memory.getpva(1)
+        )
+
+        self.stack.appendleft(self.memory.pointer + 2)
+
+        return self.jmp(a)
+
+    def ret(self):
+        return self.jmp(self.stack.popleft())
 
     def out(self):
         a = self.memory.getpva(1)
