@@ -71,11 +71,11 @@ class VirtualMachine:
 
                 self.memory.append(number)
 
-        print(f'Memory: {len(self.memory)} addresses')
+        print(f'Memory: loaded {len(self.memory)} addresses')
 
     def run(self):
         while True:
-            if not self.exec():
+            if self.exec() is False:
                 break
 
     def exec(self):
@@ -84,39 +84,33 @@ class VirtualMachine:
         if number in self.opcodes:
             return self.opcodes.get(number)()
 
-        print(number)
+        print(f'Unhandled number {number}')
 
         return False
 
     def halt(self):
         return False
 
-    def jmp(self):
-        a = self.memory.getpva(1)
+    def jmp(self, a=None):
+        a = a or self.memory.getpva(1)
 
         self.memory.setp(a)
-
-        return True
 
     def jt(self):
         a, b = self.memory.getpvra(2)
 
         if a != 0:
-            self.memory.setp(b)
+            return self.jmp(b)
         else:
             self.memory.incp(3)
-
-        return True
 
     def jf(self):
         a, b = self.memory.getpvra(2)
 
         if a == 0:
-            self.memory.setp(b)
+            return self.jmp(b)
         else:
             self.memory.incp(3)
-
-        return True
 
     def out(self):
         a = self.memory.getpva(1)
@@ -125,9 +119,5 @@ class VirtualMachine:
 
         self.memory.incp(2)
 
-        return True
-
     def noop(self):
         self.memory.incp(1)
-
-        return True
