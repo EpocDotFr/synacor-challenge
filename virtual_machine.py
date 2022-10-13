@@ -160,15 +160,15 @@ class VirtualMachine:
 
     def set(self):
         a, b = self.memory.getpvra(2)
+        b = self.registers.get(b)
 
         self.registers.set(a, b)
 
         self.memory.incp(3)
 
     def push(self):
-        a = self.registers.get(
-            self.memory.getpva(1)
-        )
+        a = self.memory.getpva(1)
+        a = self.registers.get(a)
 
         self.stack.appendleft(a)
 
@@ -178,6 +178,7 @@ class VirtualMachine:
         a = self.memory.getpva(1)
 
         v = self.stack.popleft()
+        v = self.registers.get(v)
 
         self.registers.set(a, v)
 
@@ -200,13 +201,13 @@ class VirtualMachine:
         self.memory.incp(4)
 
     def jmp(self, a=None):
-        a = a or self.memory.getpva(1)
+        a = a or self.registers.get(self.memory.getpva(1))
 
         self.memory.setp(a)
 
     def jt(self):
         a, b = self.memory.getpvra(2)
-        a = self.registers.get(a)
+        a, b = self.registers.get(a), self.registers.get(b)
 
         if a != 0:
             return self.jmp(b)
@@ -215,7 +216,7 @@ class VirtualMachine:
 
     def jf(self):
         a, b = self.memory.getpvra(2)
-        a = self.registers.get(a)
+        a, b = self.registers.get(a), self.registers.get(b)
 
         if a == 0:
             return self.jmp(b)
@@ -280,26 +281,29 @@ class VirtualMachine:
 
     def wmem(self):
         a, b = self.memory.getpvra(2)
-        a = self.registers.get(a)
+        a, b = self.registers.get(a), self.registers.get(b)
 
         self.memory[a] = b
 
         self.memory.incp(3)
 
     def call(self):
-        a = self.registers.get(
-            self.memory.getpva(1)
-        )
+        a = self.memory.getpva(1)
+        a = self.registers.get(a)
 
         self.stack.appendleft(self.memory.pointer + 2)
 
         return self.jmp(a)
 
     def ret(self):
-        return self.jmp(self.stack.popleft())
+        a = self.stack.popleft()
+        a = self.registers.get(a)
+
+        return self.jmp(a)
 
     def out(self):
         a = self.memory.getpva(1)
+        a = self.registers.get(a)
 
         print(chr(a), end='')
 
