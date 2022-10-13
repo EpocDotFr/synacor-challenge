@@ -120,8 +120,11 @@ class VirtualMachine:
             17: self.call,
             18: self.ret,
             19: self.out,
+            20: self.in_,
             21: self.noop,
         }
+
+        self.input_buffer = ''
 
     def load(self, binary_file):
         with open(binary_file, 'rb') as f:
@@ -306,6 +309,20 @@ class VirtualMachine:
         a = self.registers.get(a)
 
         print(chr(a), end='')
+
+        self.memory.incp(2)
+
+    def in_(self):
+        a = self.memory.getpva(1)
+
+        if not self.input_buffer:
+            self.input_buffer = input('> ') + '\n'
+
+        c = self.input_buffer[0]
+
+        self.input_buffer = self.input_buffer[1:]
+
+        self.registers.set(a, ord(c))
 
         self.memory.incp(2)
 
