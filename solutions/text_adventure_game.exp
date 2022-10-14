@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+# After successfully building a virtual machine able to read and execute the challenge binary, I surprisingly found it
+# contains a fully-functional text adventure game. Here are the actions to perform, automated by expect.
+#
+# Prerequisites:
+#   - Install expect: sudo apt install expect
+#   - Make this script executable: sudo chmod +x solutions/text_adventure_game.exp
+#   - Run this script: ./solutions/text_adventure_game.exp
+
+set timeout -1
+
+spawn /usr/bin/python3 run.py
+
+# --------------------
+# NOTE: SPOILERS BELOW
+# --------------------
+
+expect ">"
+send -- "take tablet\n"
+expect ">"
+send -- "use tablet\n"
+expect ">"
+send -- "doorway\n"
+expect ">"
+send -- "north\n"
+expect ">"
+send -- "north\n"
+expect ">"
+send -- "bridge\n"
+expect ">"
+send -- "continue\n"
+expect ">"
+send -- "down\n"
+expect ">"
+send -- "east\n"
+expect ">"
+send -- "take empty lantern\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "passage\n"
+expect ">"
+send -- "ladder\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "south\n"
+expect ">"
+send -- "north\n"
+expect ">"
+send -- "take can\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "ladder\n"
+expect ">"
+send -- "darkness\n"
+expect ">"
+send -- "use can\n"
+expect ">"
+send -- "use lantern\n"
+expect ">"
+send -- "continue\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "west\n"
+expect ">"
+send -- "north\n"
+expect ">"
+# two dots
+send -- "take red coin\n"
+expect ">"
+send -- "north\n"
+# _ + _ * _^2 + _^3 - _ = 399
+
+interact
