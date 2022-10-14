@@ -13,5 +13,5 @@ Clone this repo.
 ## Usage
 
 ````shell
-$ python run.py
+$ python run.py materials/challenge.bin
 ````

@@ -94,7 +94,9 @@ class Registers(collections.UserList):
 
 
 class VirtualMachine:
-    def __init__(self):
+    def __init__(self, debug=False):
+        self.debug = debug
+
         self.memory = Memory()
         self.registers = Registers()
         self.stack = collections.deque()
