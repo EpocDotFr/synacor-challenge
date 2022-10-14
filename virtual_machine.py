@@ -141,11 +141,12 @@ class VirtualMachine:
 
                 self.memory.append(number)
 
-        print(f'Memory: loaded {len(self.memory)} addresses')
-
     def run(self):
         while True:
-            if self.exec() is False:
+            try:
+                if self.exec() is False:
+                    break
+            except KeyboardInterrupt:
                 break
 
     def exec(self):
