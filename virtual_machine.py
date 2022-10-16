@@ -94,9 +94,7 @@ class Registers(collections.UserList):
 
 
 class VirtualMachine:
-    def __init__(self, debug=False):
-        self.debug = debug
-
+    def __init__(self):
         self.memory = Memory()
         self.registers = Registers()
         self.stack = collections.deque()
@@ -142,6 +140,11 @@ class VirtualMachine:
                     raise ValueError(f'Out of bounds number {number}')
 
                 self.memory.append(number)
+
+    def dump(self, binary_file):
+        with open(binary_file, 'wb') as f:
+            for number in self.memory:
+                f.write(struct.pack('<H', number))
 
     def run(self):
         while True:
@@ -321,6 +324,9 @@ class VirtualMachine:
         if not self.input_buffer:
             self.input_buffer = input('> ') + '\n'
 
+            if self.debug_cmd():
+                return True
+
         c = self.input_buffer[0]
 
         self.input_buffer = self.input_buffer[1:]
@@ -331,3 +337,17 @@ class VirtualMachine:
 
     def noop(self):
         self.memory.incp(1)
+
+    def debug_cmd(self):
+        if not self.input_buffer.startswith('!'):
+            return False
+
+        cmd, args = self.input_buffer[1:-1].split(' ', maxsplit=1)
+        args = args.split(' ')
+
+        if cmd == 'dump':
+            self.dump(args[0])
+
+        self.input_buffer = ''
+
+        return True
