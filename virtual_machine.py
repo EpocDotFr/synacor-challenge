@@ -18,6 +18,19 @@ def bitwise_not(number, num_bits):
     return (1 << num_bits) - 1 - number
 
 
+def pack_number(number):
+    return struct.pack('<H', number)
+
+
+def unpack_number(f):
+    value = f.read(2)
+
+    if not value:
+        return False
+
+    return struct.unpack('<H', value)[0]
+
+
 class Memory(collections.UserList):
     def __init__(self, *args, **kvargs):
         super(Memory, self).__init__(*args, **kvargs)
@@ -126,25 +139,58 @@ class VirtualMachine:
 
         self.input_buffer = ''
 
-    def load(self, binary_file):
-        with open(binary_file, 'rb') as f:
+    def load(self, filename):
+        with open(filename, 'rb') as f:
+            if f.read(4) == b'DUMP':
+                # Registers
+                for i in range(0, len(self.registers)):
+                    self.registers[i] = unpack_number(f)
+
+                # Stack length
+                stack_length = unpack_number(f)
+
+                # Stack
+                for _ in range(0, stack_length):
+                    self.stack.appendleft(unpack_number(f))
+
+                # Memory pointer
+                self.memory.pointer = unpack_number(f)
+            else:
+                f.seek(0)
+
+            # Memory
             while True:
-                value = f.read(2)
+                number = unpack_number(f)
 
-                if not value:  # EOF
-                    break
-
-                number, = struct.unpack('<H', value)
+                if number is False:
+                    break  # EOF
 
                 if number >= 32776:
                     raise ValueError(f'Out of bounds number {number}')
 
                 self.memory.append(number)
 
-    def dump(self, binary_file):
-        with open(binary_file, 'wb') as f:
+    def dump(self, filename):
+        with open(filename, 'wb') as f:
+            f.write(b'DUMP')
+
+            # Registers
+            for value in self.registers:
+                f.write(pack_number(value))
+
+            # Stack length
+            f.write(pack_number(len(self.stack)))
+
+            # Stack
+            for value in reversed(list(self.stack)):
+                f.write(pack_number(value))
+
+            # Memory pointer
+            f.write(pack_number(self.memory.pointer))
+
+            # Memory
             for number in self.memory:
-                f.write(struct.pack('<H', number))
+                f.write(pack_number(number))
 
     def run(self):
         while True:
