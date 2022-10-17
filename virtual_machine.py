@@ -114,6 +114,8 @@ class VirtualMachineDebugger:
         cmd = parsed[0]
 
         if not hasattr(self, cmd):
+            self.vm.input_buffer = ''
+
             return True
 
         args = parsed[1].split(' ') if len(parsed) > 1 else []
@@ -247,7 +249,10 @@ class VirtualMachine:
         opcode = self.memory.getpv()
 
         if opcode in self.opcodes:
-            return self.opcodes.get(opcode)()
+            callback, num_args = self.opcodes.get(opcode)
+            args = self.memory.getpvra(num_args) if num_args > 0 else []
+
+            return callback(*args)
 
         print(f'Unhandled opcode {opcode}')
 
@@ -255,52 +260,48 @@ class VirtualMachine:
 
     def register_opcodes(self):
         self.opcodes = {
-            0: self.halt,
-            1: self.set,
-            2: self.push,
-            3: self.pop,
-            4: self.eq,
-            5: self.gt,
-            6: self.jmp,
-            7: self.jt,
-            8: self.jf,
-            9: self.add,
-            10: self.mult,
-            11: self.mod,
-            12: self.and_,
-            13: self.or_,
-            14: self.not_,
-            15: self.rmem,
-            16: self.wmem,
-            17: self.call,
-            18: self.ret,
-            19: self.out,
-            20: self.in_,
-            21: self.noop,
+            0: (self.halt, 0),
+            1: (self.set, 2),
+            2: (self.push, 1),
+            3: (self.pop, 1),
+            4: (self.eq, 3),
+            5: (self.gt, 3),
+            6: (self.jmp, 1),
+            7: (self.jt, 2),
+            8: (self.jf, 2),
+            9: (self.add, 3),
+            10: (self.mult, 3),
+            11: (self.mod, 3),
+            12: (self.and_, 3),
+            13: (self.or_, 3),
+            14: (self.not_, 2),
+            15: (self.rmem, 2),
+            16: (self.wmem, 2),
+            17: (self.call, 1),
+            18: (self.ret, 0),
+            19: (self.out, 1),
+            20: (self.in_, 1),
+            21: (self.noop, 0),
         }
 
     def halt(self):
         return False
 
-    def set(self):
-        a, b = self.memory.getpvra(2)
+    def set(self, a, b):
         b = self.registers.get(b)
 
         self.registers.set(a, b)
 
         self.memory.incp(3)
 
-    def push(self):
-        a = self.memory.getpva(1)
+    def push(self, a):
         a = self.registers.get(a)
 
         self.stack.appendleft(a)
 
         self.memory.incp(2)
 
-    def pop(self):
-        a = self.memory.getpva(1)
-
+    def pop(self, a):
         v = self.stack.popleft()
         v = self.registers.get(v)
 
@@ -308,29 +309,26 @@ class VirtualMachine:
 
         self.memory.incp(2)
 
-    def eq(self):
-        a, b, c = self.memory.getpvra(3)
+    def eq(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, 1 if b == c else 0)
 
         self.memory.incp(4)
 
-    def gt(self):
-        a, b, c = self.memory.getpvra(3)
+    def gt(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, 1 if b > c else 0)
 
         self.memory.incp(4)
 
-    def jmp(self, a=None):
-        a = a or self.registers.get(self.memory.getpva(1))
+    def jmp(self, a):
+        a = self.registers.get(a)
 
         self.memory.setp(a)
 
-    def jt(self):
-        a, b = self.memory.getpvra(2)
+    def jt(self, a, b):
         a, b = self.registers.get(a), self.registers.get(b)
 
         if a != 0:
@@ -338,8 +336,7 @@ class VirtualMachine:
         else:
             self.memory.incp(3)
 
-    def jf(self):
-        a, b = self.memory.getpvra(2)
+    def jf(self, a, b):
         a, b = self.registers.get(a), self.registers.get(b)
 
         if a == 0:
@@ -347,72 +344,63 @@ class VirtualMachine:
         else:
             self.memory.incp(3)
 
-    def add(self):
-        a, b, c = self.memory.getpvra(3)
+    def add(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, msum(b, c))
 
         self.memory.incp(4)
 
-    def mult(self):
-        a, b, c = self.memory.getpvra(3)
+    def mult(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, mmul(b, c))
 
         self.memory.incp(4)
 
-    def mod(self):
-        a, b, c = self.memory.getpvra(3)
+    def mod(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, b % c)
 
         self.memory.incp(4)
 
-    def and_(self):
-        a, b, c = self.memory.getpvra(3)
+    def and_(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, b & c)
 
         self.memory.incp(4)
 
-    def or_(self):
-        a, b, c = self.memory.getpvra(3)
+    def or_(self, a, b, c):
         b, c = self.registers.get(b), self.registers.get(c)
 
         self.registers.set(a, b | c)
 
         self.memory.incp(4)
 
-    def not_(self):
-        a, b = self.memory.getpvra(2)
+    def not_(self, a, b):
         b = self.registers.get(b)
 
         self.registers.set(a, bitwise_not(b, 15))
 
         self.memory.incp(3)
 
-    def rmem(self):
-        a, b = self.memory.getpvra(2)
+    def rmem(self, a, b):
         b = self.registers.get(b)
 
         self.registers.set(a, self.memory[b])
 
         self.memory.incp(3)
 
-    def wmem(self):
-        a, b = self.memory.getpvra(2)
+    def wmem(self, a, b):
         a, b = self.registers.get(a), self.registers.get(b)
 
         self.memory[a] = b
 
         self.memory.incp(3)
 
-    def call(self):
-        a = self.memory.getpva(1)
+    def call(self, a):
         a = self.registers.get(a)
 
         self.stack.appendleft(self.memory.pointer + 2)
@@ -425,17 +413,14 @@ class VirtualMachine:
 
         return self.jmp(a)
 
-    def out(self):
-        a = self.memory.getpva(1)
+    def out(self, a):
         a = self.registers.get(a)
 
         print(chr(a), end='')
 
         self.memory.incp(2)
 
-    def in_(self):
-        a = self.memory.getpva(1)
-
+    def in_(self, a):
         if not self.input_buffer:
             self.input_buffer = input('> ') + '\n'
 
