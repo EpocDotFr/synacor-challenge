@@ -106,6 +106,77 @@ class Registers(collections.UserList):
         return self.indexes.index(iv)
 
 
+class VirtualMachineDebugger:
+    def __init__(self, vm):
+        self.vm = vm
+
+    def textual_operator(self, address):
+        pass
+
+    def debug_cmd(self):
+        if not self.vm.input_buffer.startswith('!'):
+            return False
+
+        parsed = self.vm.input_buffer[1:-1].split(' ', maxsplit=1)
+        cmd = parsed[0]
+
+        if not hasattr(self, cmd):
+            return True
+
+        args = parsed[1].split(' ') if len(parsed) > 1 else []
+
+        print('')
+
+        getattr(self, cmd)(*args)
+
+        print('')
+
+        self.vm.input_buffer = ''
+
+        return True
+
+    def dump(self, filename):
+        self.vm.dump(filename)
+
+        print(f'Dumped to {filename}')
+
+    def reg(self, i=None, v=None):
+        if i and v:
+            self.vm.registers[int(i)] = int(v)
+
+            return
+
+        for index, value in enumerate(self.vm.registers):
+            print(f'{index} = {value:>5}')
+
+    def sta(self):
+        print('Left (top)')
+
+        for index, value in enumerate(list(self.vm.stack)):
+            print(f'{index} = {value:>5}')
+
+        print('Right (bottom)')
+
+    def mem(self, a=None):
+        base = int(a) if a else self.vm.memory.pointer
+        start = base - 10
+
+        if start < 0:
+            start = 0
+
+        end = base + 10
+
+        if end > len(self.vm.memory):
+            end = len(self.vm.memory)
+
+        for address, value in enumerate(self.vm.memory[start:end], start):
+            the_one = '>' if address == self.vm.memory.pointer else ''
+            operation = self.textual_operator(address)
+            operation = ' : ' + operation if operation else ''
+
+            print(f'{the_one:>1} {address:>5} = {value:>5}{operation}')
+
+
 class VirtualMachine:
     def __init__(self):
         self.memory = Memory()
@@ -115,6 +186,8 @@ class VirtualMachine:
         self.register_opcodes()
 
         self.input_buffer = ''
+
+        self.debugger = VirtualMachineDebugger(self)
 
     def load(self, filename):
         with open(filename, 'rb') as f:
@@ -373,7 +446,7 @@ class VirtualMachine:
         if not self.input_buffer:
             self.input_buffer = input('> ') + '\n'
 
-            if self.debug_cmd():
+            if self.debugger.debug_cmd():
                 return True
 
         c = self.input_buffer[0]
@@ -386,54 +459,3 @@ class VirtualMachine:
 
     def noop(self):
         self.memory.incp(1)
-
-    def debug_cmd(self):
-        if not self.input_buffer.startswith('!'):
-            return False
-
-        parsed = self.input_buffer[1:-1].split(' ', maxsplit=1)
-        cmd = parsed[0]
-        args = parsed[1].split(' ') if len(parsed) > 1 else []
-
-        print('')
-
-        getattr(self, f'debug_{cmd}')(*args)
-
-        print('')
-
-        self.input_buffer = ''
-
-        return True
-
-    def debug_dump(self, filename):
-        self.dump(filename)
-
-    def debug_reg(self, i=None, v=None):
-        if i and v:
-            self.registers[int(i)] = int(v)
-
-            return
-
-        for index, value in enumerate(self.registers):
-            print(f'{index} = {value:>5}')
-
-    def debug_sta(self):
-        for index, value in enumerate(list(self.stack)):
-            print(f'{index} = {value:>5}')
-
-    def debug_mem(self, a=None):
-        base = int(a) if a else self.memory.pointer
-        start = base - 10
-
-        if start < 0:
-            start = 0
-
-        end = base + 10
-
-        if end > len(self.memory):
-            end = len(self.memory)
-
-        for address, value in enumerate(self.memory[start:end], start):
-            the_one = '>' if address == self.memory.pointer else ''
-
-            print(f'{the_one:>1} {address:>5} = {value:>5}')
