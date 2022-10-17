@@ -45,6 +45,10 @@ class Memory(collections.UserList):
         """Get pointer value range after"""
         return self[self.pointer + 1:self.pointer + i + 1]
 
+    def getvra(self, a, i):
+        """Get value range after"""
+        return self[a + 1:a + i + 1]
+
     def getpv(self):
         """Get pointer value"""
         return self[self.pointer]
@@ -98,13 +102,120 @@ class VirtualMachineDebugger:
     def __init__(self, vm):
         self.vm = vm
 
+        self.register_debug_opcodes()
+
+    def register_debug_opcodes(self):
+        self.debug_opcodes = {
+            0: self.halt,
+            1: self.set,
+            2: self.push,
+            3: self.pop,
+            4: self.eq,
+            5: self.gt,
+            6: self.jmp,
+            7: self.jt,
+            8: self.jf,
+            9: self.add,
+            10: self.mult,
+            11: self.mod,
+            12: self.and_,
+            13: self.or_,
+            14: self.not_,
+            15: self.rmem,
+            16: self.wmem,
+            17: self.call,
+            18: self.ret,
+            19: self.out,
+            20: self.in_,
+            21: self.noop,
+        }
+
+    def halt(self):
+        return 'Stop execution'
+
+    def set(self, a, b):
+        pass
+
+    def push(self, a):
+        pass
+
+    def pop(self, a):
+        pass
+
+    def eq(self, a, b, c):
+        pass
+
+    def gt(self, a, b, c):
+        pass
+
+    def jmp(self, a):
+        return 'Jump to address {}'.format(self.get_reg(a, True))
+
+    def jt(self, a, b):
+        pass
+
+    def jf(self, a, b):
+        pass
+
+    def add(self, a, b, c):
+        pass
+
+    def mult(self, a, b, c):
+        pass
+
+    def mod(self, a, b, c):
+        pass
+
+    def and_(self, a, b, c):
+        pass
+
+    def or_(self, a, b, c):
+        pass
+
+    def not_(self, a, b):
+        pass
+
+    def rmem(self, a, b):
+        return 'Read memory from address {} to {}'.format(self.get_reg(b, True), self.get_reg(a, True))
+
+    def wmem(self, a, b):
+        return 'Write memory at address {} from {}'.format(self.get_reg(a, True), self.get_reg(b, True))
+
+    def call(self, a):
+        pass
+
+    def ret(self):
+        pass
+
+    def out(self, a):
+        return 'Prints ASCII char {}'.format(self.get_reg(a, True))
+
+    def in_(self, a):
+        return 'Write one char from input to {}'.format(self.get_reg(a))
+
+    def noop(self):
+        return 'Do nothing'
+
     def textual_opcode(self, address):
         opcode = self.vm.memory[address]
 
-        if opcode not in self.vm.opcodes:
-            return ''
+        if opcode in self.vm.opcodes and opcode in self.debug_opcodes:
+            _, num_args = self.vm.opcodes.get(opcode)
+            callback = self.debug_opcodes.get(opcode)
+            args = self.vm.memory.getvra(address, num_args) if num_args > 0 else []
 
-        return 'y'
+            return callback(*args)
+
+        return ''
+
+    def get_reg(self, value, show_value=False):
+        if self.vm.registers.isri(value):
+            return '<{}>{}'.format(
+                self.vm.registers.getri(value),
+                ' ({})'.format(self.vm.registers.get(value)) if show_value else ''
+            )
+
+        return value
 
     def debug_cmd(self):
         if not self.vm.input_buffer.startswith('!'):
@@ -153,19 +264,19 @@ class VirtualMachineDebugger:
         print('Right (bottom)')
 
     def mem(self, a=None):
-        base = int(a) if a else self.vm.memory.pointer
-        start = base - 10
+        target = int(a) if a else self.vm.memory.pointer
+        start = target - 10
 
         if start < 0:
             start = 0
 
-        end = base + 10
+        end = target + 10
 
         if end > len(self.vm.memory):
             end = len(self.vm.memory)
 
         for address, value in enumerate(self.vm.memory[start:end], start):
-            the_one = '>' if address == self.vm.memory.pointer else ''
+            the_one = '>' if address == target else ''
             operation = self.textual_opcode(address)
             operation = ' : ' + operation if operation else ''
 
