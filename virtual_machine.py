@@ -112,30 +112,7 @@ class VirtualMachine:
         self.registers = Registers()
         self.stack = collections.deque()
 
-        self.opcodes = {
-            0: self.halt,
-            1: self.set,
-            2: self.push,
-            3: self.pop,
-            4: self.eq,
-            5: self.gt,
-            6: self.jmp,
-            7: self.jt,
-            8: self.jf,
-            9: self.add,
-            10: self.mult,
-            11: self.mod,
-            12: self.and_,
-            13: self.or_,
-            14: self.not_,
-            15: self.rmem,
-            16: self.wmem,
-            17: self.call,
-            18: self.ret,
-            19: self.out,
-            20: self.in_,
-            21: self.noop,
-        }
+        self.register_opcodes()
 
         self.input_buffer = ''
 
@@ -209,6 +186,32 @@ class VirtualMachine:
         print(f'Unhandled opcode {opcode}')
 
         return False
+
+    def register_opcodes(self):
+        self.opcodes = {
+            0: self.halt,
+            1: self.set,
+            2: self.push,
+            3: self.pop,
+            4: self.eq,
+            5: self.gt,
+            6: self.jmp,
+            7: self.jt,
+            8: self.jf,
+            9: self.add,
+            10: self.mult,
+            11: self.mod,
+            12: self.and_,
+            13: self.or_,
+            14: self.not_,
+            15: self.rmem,
+            16: self.wmem,
+            17: self.call,
+            18: self.ret,
+            19: self.out,
+            20: self.in_,
+            21: self.noop,
+        }
 
     def halt(self):
         return False
@@ -388,12 +391,49 @@ class VirtualMachine:
         if not self.input_buffer.startswith('!'):
             return False
 
-        cmd, args = self.input_buffer[1:-1].split(' ', maxsplit=1)
-        args = args.split(' ')
+        parsed = self.input_buffer[1:-1].split(' ', maxsplit=1)
+        cmd = parsed[0]
+        args = parsed[1].split(' ') if len(parsed) > 1 else []
 
-        if cmd == 'dump':
-            self.dump(args[0])
+        print('')
+
+        getattr(self, f'debug_{cmd}')(*args)
+
+        print('')
 
         self.input_buffer = ''
 
         return True
+
+    def debug_dump(self, filename):
+        self.dump(filename)
+
+    def debug_reg(self, i=None, v=None):
+        if i and v:
+            self.registers[int(i)] = int(v)
+
+            return
+
+        for index, value in enumerate(self.registers):
+            print(f'{index} = {value:>5}')
+
+    def debug_sta(self):
+        for index, value in enumerate(list(self.stack)):
+            print(f'{index} = {value:>5}')
+
+    def debug_mem(self, a=None):
+        base = int(a) if a else self.memory.pointer
+        start = base - 10
+
+        if start < 0:
+            start = 0
+
+        end = base + 10
+
+        if end > len(self.memory):
+            end = len(self.memory)
+
+        for address, value in enumerate(self.memory[start:end], start):
+            the_one = '>' if address == self.memory.pointer else ''
+
+            print(f'{the_one:>1} {address:>5} = {value:>5}')
