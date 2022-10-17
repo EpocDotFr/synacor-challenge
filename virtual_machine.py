@@ -37,17 +37,9 @@ class Memory(collections.UserList):
 
         self.pointer = 0
 
-    def getpvb(self, i):
-        """Get pointer value before"""
-        return self[self.pointer - i]
-
     def getpva(self, i):
         """Get pointer value after"""
         return self[self.pointer + i]
-
-    def getpvrb(self, i):
-        """Get pointer value range before"""
-        return self[self.pointer - i - 1:self.pointer - 1]
 
     def getpvra(self, i):
         """Get pointer value range after"""
@@ -64,10 +56,6 @@ class Memory(collections.UserList):
     def incp(self, i):
         """Increment pointer"""
         self.pointer += i
-
-    def decp(self, i):
-        """Decrement pointer"""
-        self.pointer -= i
 
 
 class Registers(collections.UserList):
@@ -110,8 +98,13 @@ class VirtualMachineDebugger:
     def __init__(self, vm):
         self.vm = vm
 
-    def textual_operator(self, address):
-        pass
+    def textual_opcode(self, address):
+        opcode = self.vm.memory[address]
+
+        if opcode not in self.vm.opcodes:
+            return ''
+
+        return 'y'
 
     def debug_cmd(self):
         if not self.vm.input_buffer.startswith('!'):
@@ -171,7 +164,7 @@ class VirtualMachineDebugger:
 
         for address, value in enumerate(self.vm.memory[start:end], start):
             the_one = '>' if address == self.vm.memory.pointer else ''
-            operation = self.textual_operator(address)
+            operation = self.textual_opcode(address)
             operation = ' : ' + operation if operation else ''
 
             print(f'{the_one:>1} {address:>5} = {value:>5}{operation}')
