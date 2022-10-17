@@ -1,4 +1,4 @@
-# This script solves the so called "coins challenge" found in the text adventure game. It's brute-forcing, but it works.
+# This script solves the so called "coins challenge" found in the text adventure game.
 import itertools
 
 
