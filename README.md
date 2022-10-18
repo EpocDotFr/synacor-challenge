@@ -1,5 +1,7 @@
 # Synacor Challenge
 
+<img src="/logo.png?raw=true" align="right">
+
 Source code of my solution to the [Synacor Challenge](https://challenge.synacor.com/).
 
 ## Prerequisites
