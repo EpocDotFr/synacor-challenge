@@ -18,8 +18,8 @@ def bitwise_not(number, num_bits):
     return (1 << num_bits) - 1 - number
 
 
-def pack_number(number):
-    return struct.pack('<H', number)
+def pack_number(f, number):
+    f.write(struct.pack('<H', number))
 
 
 def unpack_number(f):
@@ -332,21 +332,21 @@ class VirtualMachine:
 
             # Registers
             for value in self.registers:
-                f.write(pack_number(value))
+                pack_number(f, value)
 
             # Stack length
-            f.write(pack_number(len(self.stack)))
+            pack_number(f, len(self.stack))
 
             # Stack
             for value in reversed(list(self.stack)):
-                f.write(pack_number(value))
+                pack_number(f, value)
 
             # Memory pointer
-            f.write(pack_number(self.memory.pointer))
+            pack_number(f, self.memory.pointer)
 
             # Memory
             for number in self.memory:
-                f.write(pack_number(number))
+                pack_number(f, number)
 
     def run(self):
         while True:
