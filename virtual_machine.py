@@ -131,70 +131,128 @@ class VirtualMachineDebugger:
         }
 
     def halt(self):
-        return 'Stop execution'
+        return 'halt'
 
     def set(self, a, b):
-        pass
+        return 'set {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def push(self, a):
-        pass
+        return 'push {}'.format(
+            self.arg_value(a, True)
+        )
 
     def pop(self, a):
-        pass
+        return 'pop {}'.format(
+            self.arg_value(a, True)
+        )
 
     def eq(self, a, b, c):
-        pass
+        return 'eq {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def gt(self, a, b, c):
-        pass
+        return 'gt {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def jmp(self, a):
-        return 'Jump to address {}'.format(self.get_reg(a, True))
+        return 'jmp {}'.format(
+            self.arg_value(a, True)
+        )
 
     def jt(self, a, b):
-        pass
+        return 'jt {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def jf(self, a, b):
-        pass
+        return 'jf {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def add(self, a, b, c):
-        pass
+        return 'add {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def mult(self, a, b, c):
-        pass
+        return 'mult {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def mod(self, a, b, c):
-        pass
+        return 'mod {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def and_(self, a, b, c):
-        pass
+        return 'and {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def or_(self, a, b, c):
-        pass
+        return 'or {} {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True),
+            self.arg_value(c, True)
+        )
 
     def not_(self, a, b):
-        pass
+        return 'not {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def rmem(self, a, b):
-        return 'Read memory from address {} to {}'.format(self.get_reg(b, True), self.get_reg(a, True))
+        return 'rmem {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def wmem(self, a, b):
-        return 'Write memory at address {} from {}'.format(self.get_reg(a, True), self.get_reg(b, True))
+        return 'wmem {} {}'.format(
+            self.arg_value(a, True),
+            self.arg_value(b, True)
+        )
 
     def call(self, a):
-        pass
+        return 'call {}'.format(
+            self.arg_value(a, True)
+        )
 
     def ret(self):
-        pass
+        return 'ret'
 
     def out(self, a):
-        return 'Prints ASCII char {}'.format(self.get_reg(a, True))
+        return 'out {}'.format(
+            self.arg_value(a, True)
+        )
 
     def in_(self, a):
-        return 'Write one char from input to {}'.format(self.get_reg(a))
+        return 'in {}'.format(
+            self.arg_value(a)
+        )
 
     def noop(self):
-        return 'Do nothing'
+        return 'noop'
 
     def textual_opcode(self, address):
         opcode = self.vm.memory[address]
@@ -208,11 +266,11 @@ class VirtualMachineDebugger:
 
         return ''
 
-    def get_reg(self, value, show_value=False):
+    def arg_value(self, value, show_value=False):
         if self.vm.registers.isri(value):
-            return '<{}>{}'.format(
+            return '<{}{}>'.format(
                 self.vm.registers.getri(value),
-                ' ({})'.format(self.vm.registers.get(value)) if show_value else ''
+                ':{}'.format(self.vm.registers.get(value)) if show_value else ''
             )
 
         return value
@@ -253,7 +311,7 @@ class VirtualMachineDebugger:
             return
 
         for index, value in enumerate(self.vm.registers):
-            print(f'{index} = {value:>5}')
+            print(f'<{index}> = {value:>5}')
 
     def sta(self):
         print('Left (top)')
@@ -265,12 +323,13 @@ class VirtualMachineDebugger:
 
     def mem(self, a=None):
         target = int(a) if a else self.vm.memory.pointer
-        start = target - 10
+        span = 20
+        start = target - span
 
         if start < 0:
             start = 0
 
-        end = target + 10
+        end = target + span
 
         if end > len(self.vm.memory):
             end = len(self.vm.memory)
