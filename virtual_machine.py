@@ -353,6 +353,7 @@ class VirtualMachine:
         self.input_buffer = ''
 
         self.debugger = VirtualMachineDebugger(self)
+        self.actions = []
 
     def load(self, filename):
         with open(filename, 'rb') as f:
@@ -406,6 +407,10 @@ class VirtualMachine:
             # Memory
             for number in self.memory:
                 pack_number(f, number)
+
+    def load_actions(self, filename):
+        with open(filename, 'r') as f:
+            self.actions = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
 
     def run(self):
         while True:
@@ -592,10 +597,17 @@ class VirtualMachine:
 
     def in_(self, a):
         if not self.input_buffer:
-            self.input_buffer = input('> ') + '\n'
+            if self.actions:
+                action = self.actions.pop(0)
 
-            if self.debugger.debug_cmd():
-                return True
+                print(f'> {action}')
+
+                self.input_buffer = action + '\n'
+            else:
+                self.input_buffer = input('> ') + '\n'
+
+                if self.debugger.debug_cmd():
+                    return True
 
         c = self.input_buffer[0]
 
