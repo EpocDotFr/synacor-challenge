@@ -1,8 +1,5 @@
 # After successfully building a virtual machine able to read and execute the challenge binary, I surprisingly found it
 # contains a fully-functional text adventure game. Here are the automated actions to perform.
-#
-# To execute these actions, run:
-#   python run.py materials/challenge.bin --actions=solutions/text_adventure_game.txt
 
 doorway
 north
