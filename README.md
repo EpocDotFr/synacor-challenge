@@ -22,6 +22,8 @@ Press <kbd>CTRL+C</kbd> to stop.
 
 ## Codes
 
+> **Warning** Spoilers below.
+
 You have to find 8 codes scattered along the challenge, and submit each of them on the [challenge website](https://challenge.synacor.com/)
 to validate your progress.
 
@@ -57,7 +59,7 @@ Found in the text adventure game after using the teleporter device.
 
 ### Seventh code
 
-> WIP: I am here.
+> **Note** WIP: I am here.
 
 Found after using the teleporter device a second time, but not before setting register #8 to some very specific number.
 
