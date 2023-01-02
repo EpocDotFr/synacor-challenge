@@ -1,6 +1,8 @@
 # After successfully building a virtual machine able to read and execute the challenge binary, I surprisingly found it
 # contains a fully-functional text adventure game. Here are the automated actions to perform.
 
+take tablet
+use tablet
 doorway
 north
 north
@@ -19,9 +21,9 @@ north
 take can
 west
 ladder
-darkness
 use can
 use lantern
+darkness
 continue
 west
 west
