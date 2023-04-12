@@ -3,9 +3,9 @@ import argparse
 
 
 def run():
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('file')
-    arg_parser.add_argument('--actions')
+    arg_parser = argparse.ArgumentParser(description='The virtual machine entry point')
+    arg_parser.add_argument('file', help='Path to the virtual machine file (*.bin or *.dump) to load')
+    arg_parser.add_argument('--actions', help='Path to the automatic actions file to perform')
 
     args = arg_parser.parse_args()
 
