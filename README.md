@@ -79,3 +79,5 @@ following commands are available:
 ### Eighth code
 
 I don't know yet.
+
+> **Note** It looks like challenge.synacor.com, the site which allows to validate codes, has been taken down several weeks ago.
