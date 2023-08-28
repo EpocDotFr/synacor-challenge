@@ -22,7 +22,8 @@ Press <kbd>CTRL+C</kbd> to stop.
 
 ## Codes
 
-> **Warning** Spoilers below.
+> [!IMPORTANT]
+> Spoilers below.
 
 You have to find 8 codes scattered along the challenge, and submit each of them on the [challenge website](https://challenge.synacor.com/)
 to validate your progress.
@@ -61,7 +62,8 @@ central hall after collecting all the five coins (red, blue, shiny, concave and 
 
 ### Seventh code
 
-> **Note** WIP: I am here.
+> [!NOTE]
+> WIP: I am here.
 
 The teleporter device must be used a second time, but not before setting register #8 to some very specific number.
 
@@ -80,4 +82,5 @@ following commands are available:
 
 I don't know yet.
 
-> **Note** It looks like challenge.synacor.com, the site which allows to validate codes, has been taken down several weeks ago.
+> [!NOTE]
+> 28/08/2023: It looks like challenge.synacor.com, the site which allows to validate codes, has been taken down several weeks ago. It is thus no longer possible to validate each steps of the challenge.
