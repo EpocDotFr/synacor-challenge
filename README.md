@@ -81,6 +81,3 @@ following commands are available:
 ### Eighth code
 
 I don't know yet.
-
-> [!NOTE]
-> 28/08/2023: It looks like challenge.synacor.com, the site which allows to validate codes, has been taken down several weeks ago. It is thus no longer possible to validate each steps of the challenge.
