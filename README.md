@@ -4,6 +4,8 @@
 
 Source code of my solution to the [Synacor Challenge](https://challenge.synacor.com/).
 
+I've put myself a personal challenge: do not use any third-party packages (only use built-in Python features).
+
 ## Prerequisites
 
 Python >= 3.7.
