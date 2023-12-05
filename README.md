@@ -8,7 +8,7 @@ I've put myself a personal challenge: do not use any third-party packages (only 
 
 ## Prerequisites
 
-Python >= 3.7.
+Python >= 3.8.
 
 ## Installation
 
